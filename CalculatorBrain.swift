@@ -10,66 +10,66 @@ import Foundation
 
 class CalculatorBrain {
     
-    private var accumulator = 0.0
+    fileprivate var accumulator = 0.0
     
-    func setOperand(operand: Double) {
+    var result: Double {
+        get{
+            return accumulator
+        }
+    }
+    
+    func setOperand(_ operand: Double) {
         accumulator = operand
     }
     
-    private var operations: Dictionary<String,Operation> = [
-        "π" : Operation.Constant(M_PI),
-        "e" : Operation.Constant(M_E),
-        "√" : Operation.UnaryOperation(sqrt),
-        "cos" : Operation.UnaryOperation(cos),
-        "±" : Operation.UnaryOperation({ -$0}),
-        "×" : Operation.BinaryOperation({$0 * $1}), // == {(op1: Double, op2: Double) -> Double in return op1 * op2 }
-        "+" : Operation.BinaryOperation({$0 + $1}),
-        "−" : Operation.BinaryOperation({$0 - $1}),
-        "÷" : Operation.BinaryOperation({$0 / $1}),
-        "=" : Operation.Equals
-    ]
-    
-    private enum Operation{
-        case Constant(Double)
-        case UnaryOperation((Double) -> Double)
-        case BinaryOperation((Double, Double) -> Double)
-        case Equals
+    fileprivate enum Operation{
+        case constant(Double)
+        case unaryOperation((Double) -> Double)
+        case binaryOperation((Double, Double) -> Double)
+        case equals
     }
     
-    func performOperation(symbol: String) {
+    fileprivate var operations: Dictionary<String,Operation> = [
+        "π" : Operation.constant(M_PI),
+        "e" : Operation.constant(M_E),
+        "√" : Operation.unaryOperation(sqrt),
+        "cos" : Operation.unaryOperation(cos),
+        "±" : Operation.unaryOperation({ -$0}),
+        "×" : Operation.binaryOperation({$0 * $1}), // == {(op1: Double, op2: Double) -> Double in return op1 * op2 }
+        "+" : Operation.binaryOperation({$0 + $1}),
+        "−" : Operation.binaryOperation({$0 - $1}),
+        "÷" : Operation.binaryOperation({$0 / $1}),
+        "=" : Operation.equals
+    ]
+    
+    func performOperation(_ symbol: String) {
         if let operation = operations[symbol] {
             switch operation {
-            case .Constant(let value):
+            case .constant(let value):
                 accumulator = value
-            case .UnaryOperation(let function):
+            case .unaryOperation(let function):
                 accumulator = function(accumulator)
-            case .BinaryOperation(let function):
+            case .binaryOperation(let function):
                 executePendingBinaryOperation()
                 pending = PendingBinaryOperationInfo(binaryFunction: function, firstOperand:accumulator)
-            case .Equals:
+            case .equals:
                 executePendingBinaryOperation()
                 
             }
         }
     }
     
-    private func executePendingBinaryOperation() {
+    fileprivate var pending: PendingBinaryOperationInfo?
+    
+    fileprivate func executePendingBinaryOperation() {
         if pending != nil{
             accumulator = pending!.binaryFunction(pending!.firstOperand, accumulator)
             pending = nil
         }
     }
     
-    private var pending: PendingBinaryOperationInfo?
-    
-    private struct PendingBinaryOperationInfo {
+    fileprivate struct PendingBinaryOperationInfo {
         var binaryFunction: (Double, Double) -> Double
         var firstOperand: Double
-    }
-    
-    var result: Double {
-        get{
-            return accumulator
-        }
     }
 }
