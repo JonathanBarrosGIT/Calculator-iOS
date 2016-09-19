@@ -18,7 +18,7 @@ class ViewController: UIViewController {
         let digit = sender.currentTitle!
         if userIsTyping{
             let currentText = display.text!
-            display.text = currentText + digit
+			display.text = digit == "." && currentText.range(of: digit) != nil ? currentText : currentText + digit
         } else{
             display.text = digit
         }

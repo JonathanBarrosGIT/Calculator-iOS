@@ -11,6 +11,7 @@ import Foundation
 class CalculatorBrain {
     
     fileprivate var accumulator = 0.0
+	fileprivate var description = ""
     
     var result: Double {
         get{
@@ -21,27 +22,49 @@ class CalculatorBrain {
     func setOperand(_ operand: Double) {
         accumulator = operand
     }
-    
+	
+	fileprivate func clearValues() {
+		accumulator = 0.0
+		pending = nil
+		description = ""
+	}
+	
+	fileprivate struct PendingBinaryOperationInfo {
+		var binaryFunction: (Double, Double) -> Double
+		var firstOperand: Double
+	}
+	
+	fileprivate var pending: PendingBinaryOperationInfo?
+	
+	fileprivate func executePendingBinaryOperation() {
+		if pending != nil{
+			accumulator = pending!.binaryFunction(pending!.firstOperand, accumulator)
+			pending = nil
+		}
+	}
+	
     fileprivate enum Operation{
         case constant(Double)
         case unaryOperation((Double) -> Double)
         case binaryOperation((Double, Double) -> Double)
         case equals
+		case clear
     }
     
-    fileprivate var operations: Dictionary<String,Operation> = [
-        "π" : Operation.constant(M_PI),
-        "e" : Operation.constant(M_E),
-        "√" : Operation.unaryOperation(sqrt),
-        "cos" : Operation.unaryOperation(cos),
-        "±" : Operation.unaryOperation({ -$0}),
-        "×" : Operation.binaryOperation({$0 * $1}), // == {(op1: Double, op2: Double) -> Double in return op1 * op2 }
-        "+" : Operation.binaryOperation({$0 + $1}),
-        "−" : Operation.binaryOperation({$0 - $1}),
-        "÷" : Operation.binaryOperation({$0 / $1}),
-        "=" : Operation.equals
-    ]
-    
+	fileprivate var operations: Dictionary<String,Operation> = [
+		"π"   : Operation.constant(M_PI),
+		"e"   : Operation.constant(M_E),
+		"√"	  : Operation.unaryOperation(sqrt),
+		"cos" : Operation.unaryOperation(cos),
+		"±"   : Operation.unaryOperation({ -$0}),
+		"×"   : Operation.binaryOperation({$0 * $1}), // == {(op1: Double, op2: Double) -> Double in return op1 * op2 }
+		"+"   : Operation.binaryOperation({$0 + $1}),
+		"−"   : Operation.binaryOperation({$0 - $1}),
+		"÷"   : Operation.binaryOperation({$0 / $1}),
+		"="   : Operation.equals,
+		"C"	  : Operation.clear
+	]
+	
     func performOperation(_ symbol: String) {
         if let operation = operations[symbol] {
             switch operation {
@@ -54,22 +77,11 @@ class CalculatorBrain {
                 pending = PendingBinaryOperationInfo(binaryFunction: function, firstOperand:accumulator)
             case .equals:
                 executePendingBinaryOperation()
-                
+			case .clear:
+				clearValues()
             }
         }
     }
     
-    fileprivate var pending: PendingBinaryOperationInfo?
-    
-    fileprivate func executePendingBinaryOperation() {
-        if pending != nil{
-            accumulator = pending!.binaryFunction(pending!.firstOperand, accumulator)
-            pending = nil
-        }
-    }
-    
-    fileprivate struct PendingBinaryOperationInfo {
-        var binaryFunction: (Double, Double) -> Double
-        var firstOperand: Double
-    }
+	
 }
